@@ -1,4 +1,8 @@
-module SpecialChars
+module SpecialChars(
+	escape,
+	escapedChar,
+	delimit,
+	delimited)
 where
 
 import Data.Char
@@ -13,6 +17,8 @@ import Text.ParserCombinators.Parsec
 
 tagDelimiter = '@'
 
+delimit s = tagDelimiter : s ++ [tagDelimiter]
+
 escape = concatMap replaceAt
   where
     replaceAt x
@@ -24,7 +30,7 @@ escapedChar =
   <|>
   satisfy (/= tagDelimiter)   
 
-tagsSection = brackets $ many escapedChar 
+delimited = brackets $ many escapedChar 
   where 
     bracket = char tagDelimiter 
     brackets = between bracket bracket
