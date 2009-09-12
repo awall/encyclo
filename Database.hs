@@ -14,8 +14,9 @@ newtype Database = Database (M.Map TagsKey Body)
 
 database = do
   sections <- many section
-  return $ Database (M.fromList sections)
+  return $ Database (M.fromListWith insertNewline sections)
   where
+    insertNewline a b = b ++ "\n" ++ a
     section = do
       header <- tagsKey
       body <- many escapedChar
