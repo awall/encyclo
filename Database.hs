@@ -7,7 +7,7 @@ import Util(trim, justParse)
 import SpecialChars(escapedChar)
 import Tag as T
 import Text.ParserCombinators.Parsec
-import Data.List(intercalate)
+import Data.List(intercalate, nub)
 import qualified Data.Map as M
 
 type Body = String
@@ -55,3 +55,6 @@ prune tags d =
   Database (M.mapKeys (removeTags tags) filtered)
   where 
     (Database filtered) = filterDatabase tags d
+
+possibleTags (Database m) =
+  nub $ concat $ map unlock (M.keys m)

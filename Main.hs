@@ -5,6 +5,7 @@ import State as S
 import Tag
 import System.IO
 import Data.IORef
+import Data.List(intercalate)
 
 main = do
   state <- open
@@ -39,6 +40,7 @@ parseCommand input =
     "save" -> wrapRO save
     "pwd"  -> wrapRO outCurrent
     "pfd"  -> wrapRO outFull
+    "ls"   -> wrapRO outPossibleTags
     _      -> Nothing
 
 -- Commands
@@ -50,6 +52,7 @@ wrapRO f = Just (\ref continue -> readIORef ref >>= f >> continue)
 
 outCurrent state = putStr (showCurrent state) >> newline
 outFull state = putStr (showFull state) >> newline
+outPossibleTags = putStrLn . intercalate "\n" . possibleTags
 
 cdPlus  ts state = modifyIORef state (S.addTags ts)
 cdMinus ts state = modifyIORef state (S.removeTags ts)
