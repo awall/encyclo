@@ -3,13 +3,13 @@ where
 
 import Util(join, trim)
 import SpecialChars(escapedChar)
-import Tag(TagsKey, tagsKey, containsTag, showTagsKey)
+import Tag(TagSet, tagSet, containsTag, showTagSet)
 import Text.ParserCombinators.Parsec
 import qualified Data.Map as M
 
 type Body = String
 
-newtype Database = Database (M.Map TagsKey Body)
+newtype Database = Database (M.Map TagSet Body)
   deriving Eq
 
 database = do
@@ -18,13 +18,13 @@ database = do
   where
     insertNewline a b = b ++ "\n" ++ a
     section = do
-      header <- tagsKey
+      header <- tagSet
       body <- many escapedChar
       return $ (header, trim body)
 
 showDatabase (Database m) =
   join "\n" $ map section (M.assocs m)
-  where section (k, v) = showTagsKey k ++ "\n" ++ v
+  where section (k, v) = showTagSet k ++ "\n" ++ v
 
 instance Show Database where
   show = showDatabase

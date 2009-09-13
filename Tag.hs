@@ -1,26 +1,29 @@
-module Tag
+module Tag(
+  TagSet,
+  tagSet,
+  showTagSet,
+  containsTag)
 where
 
 import Util(join)
 import SpecialChars(delimited, delimit)
 import Text.ParserCombinators.Parsec
-import Data.List(sort)
+import Data.List(sort, nub)
 
 type Tag = String
-type Tags = [Tag]
-type TagsKey = String
+newtype TagSet = TagSet String
+  deriving (Eq, Ord)
 
-tags = delimited >>= return . words
-tagsKey = tags >>= return . lock
+tagSet = delimited >>= return . lock . words
 
-lock :: Tags -> TagsKey
-lock = join " " . sort
+lock :: [Tag] -> TagSet
+lock = TagSet . join " " . sort . nub
 
-unlock :: TagsKey -> Tags
-unlock s = words s
+unlock :: TagSet -> [Tag]
+unlock (TagSet s) = words s
 
-containsTag :: Tag -> TagsKey -> Bool
+containsTag :: Tag -> TagSet -> Bool
 containsTag tag key = tag `elem` unlock key
 
-showTagsKey :: TagsKey -> String
-showTagsKey = delimit
+showTagSet :: TagSet -> String
+showTagSet (TagSet s) = delimit s
