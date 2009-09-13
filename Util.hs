@@ -5,8 +5,6 @@ import Data.Char(isSpace)
 import Data.List(intersperse)
 import Text.ParserCombinators.Parsec
 
-join x ls = concat $ intersperse x ls
-
 trim = dropSpace . reverse . dropSpace . reverse
   where dropSpace = dropWhile isSpace
 
