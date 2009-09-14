@@ -37,9 +37,7 @@ showDatabase (Database m) =
   intercalate "\n\n" $ map section (M.assocs m)
   where section (k, v) = T.showTagSet k ++ "\n" ++ v
 
---
 -- Any string can be parsed as a database, so this is safe.
---
 parseDatabase =
   justParse database
 
@@ -64,7 +62,7 @@ merge (Database m1) (Database m2) =
 remove (Database garbage) (Database original) =
   Database (M.difference original garbage)
 
-allTags :: Database -> T.TagSet
+allTags :: Database -> S.Set T.Tag
 allTags (Database m) = S.unions (M.keys m)
 
 size :: Database -> Int

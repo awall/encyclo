@@ -1,17 +1,17 @@
 module Tag
 where
 
-import SpecialChars(delimited, delimit)
+import qualified SpecialChars as SC
 import Text.ParserCombinators.Parsec
 import Data.List(intercalate)
-import qualified Data.Set as S
+import Data.Set(Set, fromList, elems)
 
 type Tag = String
-type TagSet = S.Set Tag
+type TagSet = Set Tag
 
 tagSet = do
-  inner <- delimited 
-  return $ S.fromList $ words inner
+  inner <- SC.delimited 
+  return $ fromList $ words inner
 
 showTagSet :: TagSet -> String
-showTagSet = delimit . intercalate " " . S.elems 
+showTagSet = SC.delimit . intercalate " " . elems 

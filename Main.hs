@@ -3,7 +3,6 @@ where
 
 import qualified State as S
 import qualified Database as D
-import qualified Tag as T
 
 import System.Process
 import System.IO

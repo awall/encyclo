@@ -2,7 +2,6 @@ module Util
 where
 
 import Data.Char(isSpace)
-import Data.List(intersperse)
 import Text.ParserCombinators.Parsec
 
 trim = dropSpace . reverse . dropSpace . reverse
