@@ -4,50 +4,41 @@ where
 import qualified Database as D
 import qualified Tag as T
 import System.IO
-import Data.List(intercalate)
+import Data.List(intercalate, nub, (\\))
 
-data State = State { 
-  persistent :: D.Database,
-  current :: D.Database,
-  tags :: T.TagSet }
+data State = State {
+  db :: D.Database, 
+  tags :: [T.Tag] 
+}
 
-parseState s = 
-  State { persistent = db, current = db, tags = T.nilTagSet }
-  where db = D.parseDatabase s
+parseState s = State (D.parseDatabase s) []
 
-showTags s = intercalate "/" $ T.unlock (tags s)
+showTags = intercalate "/" . tags 
 
-showFull s = D.showDatabase (persistent s)
-showCurrent s = D.showDatabase (current s)
-showCurrentWithFullPaths = D.showDatabase . currentWithFullPaths
+showFull = D.showDatabase . db
+showCurrent (State db tags)  = D.showDatabase (D.prune tags db)
+showCurrentWithFullPaths (State db tags) = D.showDatabase (D.filter tags db) 
+possibleTags (State db tags) = D.possibleTags (D.prune tags db)
 
-currentWithFullPaths s = D.injectTags (tags s) (current s)
+withTags f (State db tags) =
+  State db (nub $ f tags)
 
-removeCurrent s =
-  s { current = D.nilDatabase,
-      persistent = D.remove (currentWithFullPaths s) (persistent s) }
+withDB f (State db tags) = 
+  State (f db) tags
 
-insert d s =
-  s { persistent = newDb,
-      current = D.prune (T.unlock $ tags s) newDb }
-  where newDb = D.merge (persistent s) d
+removeCurrent (State db tags) =
+  State (D.remove (D.filter tags db) db) tags
 
-possibleTags s = D.possibleTags $ current s
+insert newDB = withDB (D.merge newDB)
 
-removeTags ts s =
-  s { tags = newTags,
-      current = D.prune (T.unlock newTags) (persistent s) }
-  where newTags = T.removeTags ts (tags s)
-
-addTags ts s =
-  s { tags = T.addTags ts (tags s),
-      current = D.prune ts (current s) }
+removeTags garbage = withTags (\\ garbage)
+addTags new = withTags (++ new)
 
 --
 -- Persistence
 --
 saveState :: FilePath -> State -> IO ()
-saveState path = writeFile path . D.showDatabase . persistent
+saveState path = writeFile path . D.showDatabase . db
 
 openState :: FilePath -> IO State
 openState path = do

@@ -28,7 +28,7 @@ newline = putStrLn ""
 -- User feedback
 gatherInput stateRef = do
   state <- readIORef stateRef
-  putStr (showTags state)
+  putStr (S.showTags state)
   putStr ">"
   flush
   getLine 
