@@ -1,14 +1,4 @@
-module State(
-  State,
-  parseState,
-  showCurrent,
-  showFull,
-  showTags,
-  saveState,
-  openState,
-  removeTags,
-  possibleTags,
-  addTags)
+module State
 where
 
 import qualified Database as D
@@ -22,13 +12,25 @@ data State = State {
   tags :: T.TagSet }
 
 parseState s = 
-  State { persistent = db, current = db, tags = T.null }
+  State { persistent = db, current = db, tags = T.nilTagSet }
   where db = D.parseDatabase s
 
 showTags s = intercalate "/" $ T.unlock (tags s)
 
 showFull s = D.showDatabase (persistent s)
 showCurrent s = D.showDatabase (current s)
+showCurrentWithFullPaths = D.showDatabase . currentWithFullPaths
+
+currentWithFullPaths s = D.injectTags (tags s) (current s)
+
+removeCurrent s =
+  s { current = D.nilDatabase,
+      persistent = D.remove (currentWithFullPaths s) (persistent s) }
+
+insert d s =
+  s { persistent = newDb,
+      current = D.prune (T.unlock $ tags s) newDb }
+  where newDb = D.merge (persistent s) d
 
 possibleTags s = D.possibleTags $ current s
 

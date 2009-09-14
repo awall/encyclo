@@ -5,11 +5,11 @@ module Tag(
   containsTag,
   removeTags,
   addTags,
-  null,
+  mergeTags,
+  nilTagSet,
   unlock)
 where
 
-import Prelude hiding (null)
 import SpecialChars(delimited, delimit)
 import Text.ParserCombinators.Parsec
 import Data.List(sort, nub, delete, intercalate, (\\))
@@ -18,7 +18,7 @@ type Tag = String
 newtype TagSet = TagSet String
   deriving (Eq, Ord)
 
-null = TagSet ""
+nilTagSet = TagSet ""
 
 tagSet = delimited >>= return . lock . words
 
@@ -30,6 +30,10 @@ lock = TagSet . intercalate " " . sort . nub
 
 unlock :: TagSet -> [Tag]
 unlock (TagSet s) = words s
+
+mergeTags :: TagSet -> TagSet -> TagSet
+mergeTags t1 t2 =
+  lock $ unlock t1 ++ unlock t2
 
 containsTag :: Tag -> TagSet -> Bool
 containsTag tag key = tag `elem` unlock key
