@@ -3,13 +3,15 @@ where
 
 import SpecialChars(delimited, delimit)
 import Text.ParserCombinators.Parsec
-import Data.List(intercalate, sort, nub)
+import Data.List(intercalate)
+import qualified Data.Set as S
 
 type Tag = String
+type TagSet = S.Set Tag
 
-tags = do
+tagSet = do
   inner <- delimited 
-  return $ sort (nub (words inner))
+  return $ S.fromList $ words inner
 
-showTags :: [Tag] -> String
-showTags = delimit . intercalate " " 
+showTagSet :: TagSet -> String
+showTagSet = delimit . intercalate " " . S.elems 

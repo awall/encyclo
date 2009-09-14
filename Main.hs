@@ -1,14 +1,16 @@
 module Main
 where
 
-import State as S
+import qualified State as S
 import qualified Database as D
-import Tag
+import qualified Tag as T
+
 import System.Process
 import System.IO
 import System.Directory
 import Data.IORef
-import Data.List(intercalate)
+import Data.List(intercalate, sort)
+import Data.Set(elems)
 
 main = do
   state <- open
@@ -28,13 +30,15 @@ newline = putStrLn ""
 -- User feedback
 gatherInput stateRef = do
   state <- readIORef stateRef
-  putStr (S.showTags state)
-  putStr ">"
+  let tags = S.tags state
+      dir  = intercalate "/" tags ++ "/"
+      num  = D.size (S.current state)
+  putStr $ dir ++ " [" ++ show num ++ " entries] >"
   flush
   getLine 
 
 -- Parsing Commands
-parseCommand :: String -> Maybe (IORef State -> IO () -> IO ())
+parseCommand :: String -> Maybe (IORef S.State -> IO () -> IO ())
 parseCommand ('c':'d':'+':' ':rest) = wrap $ cdPlus (words rest)
 parseCommand ('c':'d':'-':' ':rest) = wrap $ cdMinus (words rest)
 parseCommand input =
@@ -48,15 +52,15 @@ parseCommand input =
     _      -> Nothing
 
 -- Commands
-wrap :: (IORef State -> IO ()) -> Maybe (IORef State -> IO () -> IO ())
+wrap :: (IORef S.State -> IO ()) -> Maybe (IORef S.State -> IO () -> IO ())
 wrap f = Just (\ref continue -> f ref >> continue)
 
-wrapRO :: (State -> IO ()) -> Maybe (IORef State -> IO () -> IO ())
+wrapRO :: (S.State -> IO ()) -> Maybe (IORef S.State -> IO () -> IO ())
 wrapRO f = Just (\ref continue -> readIORef ref >>= f >> continue)
 
-outCurrent state = putStr (showCurrent state) >> newline
-outFull state = putStr (showFull state) >> newline
-outPossibleTags = putStrLn . intercalate "\n" . possibleTags
+outCurrent state = putStr (D.showDatabase $ S.current state) >> newline
+outFull state = putStr (D.showDatabase $ S.full state) >> newline
+outPossibleTags = putStrLn . intercalate "\n" . sort . elems . S.possibleTags
 
 cdPlus  ts stateRef = modifyIORef stateRef (S.addTags ts)
 cdMinus ts stateRef = modifyIORef stateRef (S.removeTags ts)
@@ -64,7 +68,7 @@ cdMinus ts stateRef = modifyIORef stateRef (S.removeTags ts)
 editInVim stateRef = do
   let editTemp path handle = do
         state <- readIORef stateRef
-        let contents = S.showCurrentWithFullPaths state
+        let contents = D.showDatabase (S.currentWithFullPaths state)
         hPutStr handle contents
         hClose handle
         modifyIORef stateRef S.removeCurrent
@@ -78,8 +82,14 @@ editInVim stateRef = do
 dbPath = ".encyclo"
 tempTemplate = "tmp.encyclo"
 
-open = openState dbPath
-save = saveState dbPath 
+open :: IO S.State
+open = do
+  input <- readFile dbPath
+  return $ S.fromDatabase $ D.parseDatabase input
+
+save :: S.State -> IO ()
+save state = 
+  writeFile dbPath (D.showDatabase (S.full state))   
 
 withTemp f = do
   (path, handle) <- openTempFile "." tempTemplate

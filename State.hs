@@ -3,44 +3,34 @@ where
 
 import qualified Database as D
 import qualified Tag as T
-import System.IO
-import Data.List(intercalate, nub, (\\))
 
-data State = State {
-  db :: D.Database, 
-  tags :: [T.Tag] 
-}
+import Data.List(nub, (\\))
+import Data.Set(fromList)
 
-parseState s = State (D.parseDatabase s) []
+data State = State D.Database [T.Tag]
 
-showTags = intercalate "/" . tags 
+fromDatabase db = State db []
 
-showFull = D.showDatabase . db
-showCurrent (State db tags)  = D.showDatabase (D.prune tags db)
-showCurrentWithFullPaths (State db tags) = D.showDatabase (D.filter tags db) 
-possibleTags (State db tags) = D.possibleTags (D.prune tags db)
+tags (State _ ts) = ts
+full (State db _) = db
 
-withTags f (State db tags) =
-  State db (nub $ f tags)
+current (State db ts) =
+  D.prune (fromList ts) db
 
-withDB f (State db tags) = 
-  State (f db) tags
+currentWithFullPaths (State db ts) =
+  D.filter (fromList ts) db
 
-removeCurrent (State db tags) =
-  State (D.remove (D.filter tags db) db) tags
+possibleTags (State db ts) = 
+  D.allTags (D.prune (fromList ts) db)
 
-insert newDB = withDB (D.merge newDB)
+removeCurrent (State db ts) =
+  State (D.remove (D.filter (fromList ts) db) db) ts
 
-removeTags garbage = withTags (\\ garbage)
-addTags new = withTags (++ new)
+insert newDB (State db ts) = 
+  State (D.merge newDB db) ts
 
---
--- Persistence
---
-saveState :: FilePath -> State -> IO ()
-saveState path = writeFile path . D.showDatabase . db
-
-openState :: FilePath -> IO State
-openState path = do
-  input <- readFile path
-  return $ parseState input
+removeTags garbage (State db ts) = 
+  State db (ts \\ garbage)
+  
+addTags new (State db ts) = 
+  State db (nub $ ts ++ new)
