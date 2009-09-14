@@ -53,10 +53,12 @@ filterDatabase tags (Database m) =
     matchesTags key _ =
       any (\t -> containsTag t key) tags
 
-prune tags d =
-  Database (M.mapKeys (removeTags tags) filtered)
-  where 
-    (Database filtered) = filterDatabase tags d
+prune tags d
+  | nullTagSet (lock $ tags) = d
+  | otherwise =	
+      Database (M.mapKeys (removeTags tags) filtered)
+      where 
+        (Database filtered) = filterDatabase tags d
 
 merge (Database m1) (Database m2) =
   Database (merge' m1 m2)

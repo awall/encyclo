@@ -1,13 +1,4 @@
-module Tag(
-  TagSet,
-  tagSet,
-  showTagSet,
-  containsTag,
-  removeTags,
-  addTags,
-  mergeTags,
-  nilTagSet,
-  unlock)
+module Tag
 where
 
 import SpecialChars(delimited, delimit)
@@ -19,6 +10,8 @@ newtype TagSet = TagSet String
   deriving (Eq, Ord)
 
 nilTagSet = TagSet ""
+nullTagSet (TagSet "") = True
+nullTagSet _           = False
 
 tagSet = delimited >>= return . lock . words
 
