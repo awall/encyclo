@@ -76,7 +76,7 @@ editInVim stateRef = do
 
 -- Read/Write state
 dbPath = ".encyclo"
-tempTemplate = "encyclo.tmp"
+tempTemplate = "tmp.encyclo"
 
 open = openState dbPath
 save = saveState dbPath 
