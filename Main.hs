@@ -65,21 +65,18 @@ cdPlus  ts stateRef = modifyIORef stateRef (S.addTags ts)
 cdMinus ts stateRef = modifyIORef stateRef (S.removeTags ts)
 
 editInVim stateRef = do
-  let editTemp path handle = do
-        state <- readIORef stateRef
-        let contents = D.showDatabase (S.currentWithFullPaths state)
-        hPutStr handle contents
-        hClose handle
-        modifyIORef stateRef S.removeCurrent
-        runVim path
-        newContents <- readFile path
-        let statePart = D.parseDatabase newContents
-        modifyIORef stateRef (S.insert statePart)        
-  withTemp editTemp
+  state <- readIORef stateRef
+  let contents = D.showDatabase (S.currentWithFullPaths state)
+  writeFile tempPath contents
+  modifyIORef stateRef S.removeCurrent
+  runVim tempPath
+  newContents <- readFile tempPath
+  let statePart = D.parseDatabase newContents
+  modifyIORef stateRef (S.insert statePart)        
 
 -- Read/Write state
 dbPath = ".encyclo"
-tempTemplate = "tmp.encyclo"
+tempPath = ".encyclotemp"
 
 open :: IO S.State
 open = do
@@ -89,12 +86,6 @@ open = do
 save :: S.State -> IO ()
 save state = 
   writeFile dbPath (D.showDatabase (S.full state))   
-
-withTemp f = do
-  (path, handle) <- openTempFile "." tempTemplate
-  result <- f path handle
-  removeFile path
-  return result
 
 runVim path = do 
   process <- runCommand $ "vim " ++ path
