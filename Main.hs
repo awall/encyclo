@@ -45,8 +45,7 @@ parseCommand input =
     "quit" -> Just $ (\_ _ -> return ())
     "edit" -> wrap editInVim
     "save" -> wrapRO save
-    "pwd"  -> wrapRO outCurrent
-    "pfd"  -> wrapRO outFull
+    "cat"  -> wrapRO outCurrent
     "ls"   -> wrapRO outPossibleTags
     _      -> Nothing
 
@@ -58,7 +57,6 @@ wrapRO :: (S.State -> IO ()) -> Maybe (IORef S.State -> IO () -> IO ())
 wrapRO f = Just (\ref continue -> readIORef ref >>= f >> continue)
 
 outCurrent state = putStr (D.showDatabase $ S.current state) >> newline
-outFull state = putStr (D.showDatabase $ S.full state) >> newline
 outPossibleTags = putStrLn . intercalate "\n" . sort . elems . S.possibleTags
 
 cdPlus  ts stateRef = modifyIORef stateRef (S.addTags ts)
