@@ -34,3 +34,6 @@ removeTags garbage (State db ts) =
   
 addTags new (State db ts) = 
   State db (nub $ ts ++ new)
+
+replaceTags new (State db _) =
+  State db (nub $ new)
