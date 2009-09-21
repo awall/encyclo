@@ -6,7 +6,7 @@ import qualified SpecialChars as SC
 
 import Prelude hiding (filter)
 import Maybe
-import Util(trim, justParse)
+import Util
 
 import Text.ParserCombinators.Parsec
 import Data.List(intercalate, sort, nub, intersect, (\\))
@@ -25,13 +25,13 @@ database = do
   where
     fullSection = do 
       header <- T.tagSet
-      body <- many SC.escapedChar
-      return $ (header, trim body)
+      b <- body
+      return $ (header, b)
     nullSection = do 
       spaces
-      body <- many SC.escapedChar
-      let b = trim body
+      b <- body
       return $ if null b then Nothing else Just (S.empty, b)
+    body = trimmed (many SC.escapedChar)
 
 showDatabase (Database m) =
   intercalate "\n\n" $ map section (M.assocs m)

@@ -8,6 +8,7 @@ import qualified State as S
 import qualified Database as D
 import qualified Tag as T
 
+import Util
 import Text.ParserCombinators.Parsec
 import System.Process
 import System.IO
@@ -33,10 +34,6 @@ command =
 --
 -- Utility parsers
 --
-notSpace = satisfy (not . isSpace)
-spaces1 = many1 space
-word = many1 notSpace
-trimmed = between spaces spaces
 args =
   do spaces1
      word `sepBy` spaces1
