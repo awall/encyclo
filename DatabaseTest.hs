@@ -17,7 +17,14 @@ tests = TestList [
   "spaces"    ~: preSpaces,
   "pretag"    ~: preTag   ,
   "unclosed"  ~: unclosed ,
+  "empty"     ~: empty    ,
   "order"     ~: order    ]
+
+empty =
+  version1 ~=? version2
+  where
+    version1 = nilDatabase
+    version2 = pd ""
 
 order =
   version1 ~=? version2
