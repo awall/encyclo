@@ -70,7 +70,7 @@ invalid = do
 
 cat = do
   string "cat"
-  return $ putStrLn . D.showDatabase . S.current
+  return $ putStrLn . D.prettyPrintDatabase . S.current
 
 ls = do
   string "ls"

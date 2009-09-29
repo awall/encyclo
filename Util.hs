@@ -4,6 +4,8 @@ where
 import Data.Char(isSpace)
 import Text.ParserCombinators.Parsec
 
+trim = reverse . dropSpaces . reverse . dropSpaces
+  where dropSpaces = dropWhile isSpace
 
 notSpace = satisfy (not . isSpace)
 

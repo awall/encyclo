@@ -3,6 +3,7 @@ module Database(
   nilDatabase,
   database,
   showDatabase,
+  prettyPrintDatabase,
   filter,
   prune,
   merge,
@@ -51,9 +52,14 @@ database' = do
                  b <- many SC.escapedChar
                  return (header, b)
 
-showDatabase (Database m) =
+showDatabase' (Database m) transform =
   concatMap section (M.assocs m)
-  where section (k, v) = T.showTagSet k ++ v
+  where section (k, v) = T.showTagSet k ++ transform v
+
+showDatabase db = showDatabase' db id
+
+prettyPrintDatabase db = showDatabase' db pad
+  where pad s = "\n" ++ trim s ++ "\n\n"
 
 filter :: T.TagSet -> Database -> Database
 filter tags (Database m) =
