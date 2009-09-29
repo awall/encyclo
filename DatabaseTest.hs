@@ -12,7 +12,6 @@ md = maybeParse database
 tests = TestList [
   "readWrite" ~: readWrite,
   "multitag"  ~: multitag ,
-  "newlines"  ~: newlines ,
   "combine"   ~: combine  ,
   "spaces"    ~: preSpaces,
   "pretag"    ~: preTag   ,
@@ -36,13 +35,7 @@ combine =
   version1 ~=? version2
   where
     version1 = pd "@tag1@blah1@tag1@blah2@tag1@blah3"
-    version2 = pd "@tag1@blah1\nblah2\nblah3"
-
-newlines =
-  version1 ~=? version2
-  where
-    version1 = pd "@tag1@\n\t \r \nbl\t\nah\t\r\n  @tag2@blah"
-    version2 = pd "@tag1@bl\t\nah\n@tag2@\n\rblah\t\n"
+    version2 = pd "@tag1@blah1blah2blah3"
 
 readWrite =
   version1 ~=? version2

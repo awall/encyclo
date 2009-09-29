@@ -1,4 +1,14 @@
-module Database
+module Database(
+  Database,
+  nilDatabase,
+  database,
+  showDatabase,
+  filter,
+  prune,
+  merge,
+  remove,
+  size,
+  allTags)  
 where
 
 import qualified Tag as T
@@ -21,7 +31,7 @@ instance Show Database where
 
 nilDatabase = Database (M.empty)
 
-insertNewline a b = b ++ "\n" ++ a
+combine a b = b ++ a
 
 -- This parser will not match on PARTs of strings, but only on the whole string itself.
 -- In other words, the 'eof' marker in this parser means that it this parser can not be
@@ -35,15 +45,15 @@ database = do
 database' = do
   spaces
   sections <- many section
-  return $ Database (M.fromListWith insertNewline sections)
+  return $ Database (M.fromListWith combine sections)
   where
     section = do header <- T.tagSet
-                 b <- trimmed $ many SC.escapedChar
+                 b <- many SC.escapedChar
                  return (header, b)
 
 showDatabase (Database m) =
-  intercalate "\n\n" $ map section (M.assocs m)
-  where section (k, v) = T.showTagSet k ++ "\n" ++ v
+  concatMap section (M.assocs m)
+  where section (k, v) = T.showTagSet k ++ v
 
 filter :: T.TagSet -> Database -> Database
 filter tags (Database m) =
@@ -61,7 +71,7 @@ prune tags d =
 merge :: Database -> Database -> Database
 merge (Database m1) (Database m2) =
   Database (merge' m1 m2)
-  where merge' = M.unionWith insertNewline	
+  where merge' = M.unionWith combine	
 
 remove (Database garbage) (Database original) =
   Database (M.difference original garbage)

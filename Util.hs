@@ -11,16 +11,6 @@ spaces1 = many1 space
 
 word = many1 notSpace
 
-trim xs = reverse (trim' (reverse (trim' xs)))
-  where
-    trim' (x:xs) 
-      | isSpace x = trim' xs
-      | otherwise = x:xs
-
-trimmed p = do
-  chars <- p
-  return $ trim chars
-
 simpleParse parser x =
   case parse parser "" x of
     Right value -> Right value

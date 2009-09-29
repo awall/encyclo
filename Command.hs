@@ -45,7 +45,7 @@ args =
 --
 wrapRO :: Parser (S.State -> IO ()) -> Parser (Ref -> IO () -> IO ())
 wrapRO parser = do
-  f <- trimmed parser
+  f <- parser
   return $ \ref continue -> do
     state <- readIORef ref
     f state
@@ -53,7 +53,7 @@ wrapRO parser = do
 
 wrap :: Parser (Ref -> IO ()) -> Parser (Ref -> IO () -> IO ()) 
 wrap parser = do 
-  f <- trimmed parser
+  f <- parser
   return $ \ref continue -> do
     f ref
     continue
@@ -62,7 +62,7 @@ wrap parser = do
 -- Command Parsers
 --
 quit = do
-  trimmed $ string "quit"
+  string "quit"
   return $ const $ const $ return ()
 
 invalid = do
@@ -94,10 +94,9 @@ edit = do
     runVim P.tempPath
     newContents <- readFile P.tempPath
     case simpleParse D.database newContents of
-      Right db -> do let updatedState = S.insert db (S.removeCurrent state)
-                     P.save updatedState
-                     writeIORef ref updatedState
-      Left err -> printf "Failed to parse '%s': %s. Your changes will not be persisted." P.tempPath err
+      Right db -> do modifyIORef ref S.removeCurrent
+                     modifyIORef ref (S.insert db)
+      Left err -> printf "Failed to parse '%s': %s. Your changes to the file had no effect." P.tempPath err
   where
     runVim p = runCommand ("vim " ++ p) >>= waitForProcess
 
