@@ -1,8 +1,4 @@
-module SpecialChars(
-	escape,
-	escapedChar,
-	delimit,
-	delimited)
+module SpecialChars
 where
 
 import Data.Char
@@ -29,6 +25,11 @@ escapedChar =
   try (char '\\' >> char tagDelimiter)
   <|>
   satisfy (/= tagDelimiter)   
+
+escapedCharNoSpace =
+  try (char '\\' >> char tagDelimiter)
+  <|>
+  satisfy (\x -> x /= tagDelimiter && (not (isSpace x)))
 
 delimited = brackets $ many escapedChar 
   where 

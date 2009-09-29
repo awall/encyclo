@@ -11,14 +11,27 @@ spaces1 = many1 space
 
 word = many1 notSpace
 
-trimmed = between spaces spaces
+trim xs = reverse (trim' (reverse (trim' xs)))
+  where
+    trim' (x:xs) 
+      | isSpace x = trim' xs
+      | otherwise = x:xs
+
+trimmed p = do
+  chars <- p
+  return $ trim chars
+
+simpleParse parser x =
+  case parse parser "" x of
+    Right value -> Right value
+    Left err -> Left $ show err
 
 justParse parser x =
   case parse parser "" x of
     Right value -> value
     Left err -> error $ show err
 
-maybeParser parser x =
+maybeParse parser x =
   case parse parser "" x of
     Right value -> Just value
     Left _ -> Nothing

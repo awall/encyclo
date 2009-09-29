@@ -4,13 +4,10 @@ where
 import Database
 import Text.ParserCombinators.Parsec
 import Test.HUnit
-
-justParse p x = 
-  case parse p "" x of
-    Right x -> x
-    Left err -> error (show err)
+import Util
 
 pd = justParse database
+md = maybeParse database
 
 tests = TestList [
   "readWrite" ~: readWrite,
@@ -18,7 +15,8 @@ tests = TestList [
   "newlines"  ~: newlines ,
   "combine"   ~: combine  ,
   "spaces"    ~: preSpaces,
-  "nullTag"   ~: nullTag  ,
+  "pretag"    ~: preTag   ,
+  "unclosed"  ~: unclosed ,
   "order"     ~: order    ]
 
 order =
@@ -54,12 +52,15 @@ multitag =
 preSpaces =
   version1 ~=? version2
   where
-    version1 = pd "@tag1@body1"
-    version2 = pd "     @tag1@body1"
+    version1 = pd "     @tag1@body1"
+    version2 = pd "@tag1@body1"
 
-nullTag =
-  version1 ~=? version2
+preTag =
+  Nothing ~=? version1
   where
-    version1 = pd "blahblah@tag1@body1"
-    version2 = pd "@@blahblah@tag1@body1"
+    version1 = md "blahblah@tag1@body1"
 
+unclosed =
+  version1 ~=? Nothing
+  where
+    version1 = md "@unclosed tags here"

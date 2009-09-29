@@ -12,13 +12,12 @@ import Data.IORef
 import Data.List(intercalate)
 
 main = do
-  state <- P.open
-  ref <- newIORef state 
-  let loop = do
-        input <- gatherInput ref
-        let f = justParse C.command input
-        f ref loop
-  loop
+  P.open (\state -> do ref <- newIORef state 
+                       let loop = do
+                           input <- gatherInput ref
+                           let f = justParse C.command input
+                           f ref loop
+                       loop)
 
 -- User feedback
 gatherInput ref = do

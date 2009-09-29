@@ -16,6 +16,7 @@ import Data.IORef
 import Data.Char
 import Data.List
 import Data.Set(elems)
+import Text.Printf
 
 type Ref = IORef S.State
 
@@ -90,11 +91,13 @@ edit = do
     state <- readIORef ref
     let contents = D.showDatabase (S.currentWithFullPaths state)
     writeFile P.tempPath contents
-    modifyIORef ref S.removeCurrent
     runVim P.tempPath
     newContents <- readFile P.tempPath
-    let statePart = D.parseDatabase newContents
-    modifyIORef ref (S.insert statePart)   
+    case simpleParse D.database newContents of
+      Right db -> do let updatedState = S.insert db (S.removeCurrent state)
+                     P.save updatedState
+                     writeIORef ref updatedState
+      Left err -> printf "Failed to parse '%s': %s. Your changes will not be persisted." P.tempPath err
   where
     runVim p = runCommand ("vim " ++ p) >>= waitForProcess
 

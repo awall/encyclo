@@ -14,32 +14,36 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 newtype Database = Database (M.Map T.TagSet String)
+  deriving Eq
+
+instance Show Database where
+  show = showDatabase
+
+nilDatabase = Database (M.empty)
 
 insertNewline a b = b ++ "\n" ++ a
 
+-- This parser will not match on PARTs of strings, but only on the whole string itself.
+-- In other words, the 'eof' marker in this parser means that it this parser can not be
+-- 'combined' inside other parsers, so 'many database', and other such nonsense, will 
+-- simply not work. If it's necessary to do this, exposing database' is the answer.
 database = do
-  nullSection <- nullSection
-  fullSections <- many fullSection
-  let sections = fullSections ++ maybeToList nullSection 
+  db <- database'
+  eof
+  return db
+
+database' = do
+  spaces
+  sections <- many section
   return $ Database (M.fromListWith insertNewline sections)
   where
-    fullSection = do 
-      header <- T.tagSet
-      b <- body
-      return $ (header, b)
-    nullSection = do 
-      spaces
-      b <- body
-      return $ if null b then Nothing else Just (S.empty, b)
-    body = trimmed (many SC.escapedChar)
+    section = do header <- T.tagSet
+                 b <- trimmed $ many SC.escapedChar
+                 return (header, b)
 
 showDatabase (Database m) =
   intercalate "\n\n" $ map section (M.assocs m)
   where section (k, v) = T.showTagSet k ++ "\n" ++ v
-
--- Any string can be parsed as a database, so this is safe.
-parseDatabase =
-  justParse database
 
 filter :: T.TagSet -> Database -> Database
 filter tags (Database m) =
