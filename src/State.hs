@@ -2,12 +2,11 @@ module State
 where
 
 import qualified Database as D
-import qualified Tag as T
 
 import Data.List(nub, (\\))
 import Data.Set(fromList)
 
-data State = State D.Database [T.Tag]
+data State = State D.Database [D.Tag]
 
 fromDatabase db = State db []
 
@@ -18,13 +17,13 @@ current (State db ts) =
   D.prune (fromList ts) db
 
 currentWithFullPaths (State db ts) =
-  D.filter (fromList ts) db
+  D.select (fromList ts) db
 
 possibleTags (State db ts) = 
-  D.allTags (D.prune (fromList ts) db)
+  D.tags (D.prune (fromList ts) db)
 
 removeCurrent (State db ts) =
-  State (D.remove (D.filter (fromList ts) db) db) ts
+  State (D.remove (D.select (fromList ts) db) db) ts
 
 insert newDB (State db ts) = 
   State (D.merge newDB db) ts

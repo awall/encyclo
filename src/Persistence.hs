@@ -14,9 +14,9 @@ tempPath = ".encyclotemp"
 open :: (S.State -> IO ()) -> IO ()
 open withState = do 
   contents <- readFile dbPath 
-  case simpleParse D.database contents of
+  case simpleParse D.databaseP contents of
     Right db -> withState $ S.fromDatabase db
     Left err -> printf "Parsing error when attempting to open '%s': %s." dbPath err 
 
 save :: S.State -> IO ()
-save = writeFile dbPath . D.showDatabase . S.full
+save = writeFile dbPath . D.ugly . S.full

@@ -1,13 +1,14 @@
 module DatabaseTest
 where
 
-import Database
+import qualified Database as D
+
 import Text.ParserCombinators.Parsec
 import Test.HUnit
 import Util
 
-pd = justParse database
-md = maybeParse database
+pd = justParse D.databaseP
+md = maybeParse D.databaseP
 
 tests = TestList [
   "readWrite" ~: readWrite,
@@ -22,7 +23,7 @@ tests = TestList [
 empty =
   version1 ~=? version2
   where
-    version1 = nilDatabase
+    version1 = D.empty
     version2 = pd ""
 
 order =
@@ -41,7 +42,7 @@ readWrite =
   version1 ~=? version2
   where
     version1 = pd "@tag1@\n\t  \nbl\t\nah\t\n  @tag2 tag3@blah"
-    version2 = pd $ showDatabase version1 
+    version2 = pd $ D.ugly version1 
 
 multitag =
   version1 ~=? version2

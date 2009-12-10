@@ -6,7 +6,6 @@ where
 import qualified Persistence as P
 import qualified State as S
 import qualified Database as D
-import qualified Tag as T
 
 import Util
 import Text.ParserCombinators.Parsec
@@ -70,7 +69,7 @@ invalid = do
 
 cat = do
   string "cat"
-  return $ putStrLn . D.prettyPrintDatabase . S.current
+  return $ putStrLn . D.pretty . S.current
 
 ls = do
   string "ls"
@@ -89,14 +88,13 @@ edit = do
   string "edit"
   return $ \ref -> do
     state <- readIORef ref
-    let contents = D.showDatabase (S.currentWithFullPaths state)
+    let contents = D.ugly (S.currentWithFullPaths state)
     writeFile P.tempPath contents
     runVim P.tempPath
     newContents <- readFile P.tempPath
-    case simpleParse D.database newContents of
-      Right db -> do modifyIORef ref S.removeCurrent
-                     modifyIORef ref (S.insert db)
-      Left err -> printf "Failed to parse '%s': %s. Your changes to the file had no effect." P.tempPath err
+    case simpleParse D.databaseP newContents of
+      Right db -> modifyIORef ref $ \s -> S.insert db (S.removeCurrent s)
+      Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." P.tempPath err
   where
     runVim p = runCommand ("vim " ++ p) >>= waitForProcess
 

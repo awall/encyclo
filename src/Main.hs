@@ -10,6 +10,7 @@ import Util(justParse)
 import System.IO
 import Data.IORef
 import Data.List(intercalate)
+import Text.Printf
 
 main = do
   P.open (\state -> do ref <- newIORef state 
@@ -25,6 +26,6 @@ gatherInput ref = do
   let tags = S.tags state
       dir  = intercalate "/" tags ++ "/"
       num  = D.size (S.current state)
-  putStr $ dir ++ " [" ++ show num ++ " entries] >"
+  printf "%s [%d entries] >" dir num
   hFlush stdout
   getLine 
