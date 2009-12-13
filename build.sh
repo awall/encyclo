@@ -1,3 +1,3 @@
 cp -f src/*.hs bin
 cd bin
-ghc --make Main -o encyclo -XFlexibleInstances
+ghc --make Main -o encyclo -XTypeSynonymInstances

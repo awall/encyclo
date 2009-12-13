@@ -4,39 +4,36 @@ where
 import Data.Char
 import Text.ParserCombinators.Parsec
 
--- @ is a special character which denotes the start and end of a new tags section
--- \@ is interpreted as a literal @
--- for all other x, \x is interpreted as \x
--- @ is the only character with special meaning
--- @ is the only character that is escaped
-
-tagDelimiter :: Char
-tagDelimiter = '@'
+--
+-- | is a special character which denotes the start and end of a new tags section.
+-- For all x, `x is interpreted as x.
+-- To include | in your writing, users must write `|
+-- To include ` in your writing, users must write ``
+--
+-- There is NO OTHER special syntax.
+--
+pre = '`'
+header = '|'
 
 delimit :: String -> String
-delimit s = tagDelimiter : s ++ [tagDelimiter]
+delimit s = header : escape s ++ [header]
 
 escape :: String -> String 
 escape = concatMap replaceAt
   where
     replaceAt x
-      | x == tagDelimiter = '\\':[x]
-      | otherwise         =      [x]
+      | x == header = [pre,header] 
+      | x == pre    = [pre,pre]
+      | otherwise   = [x]
 
-escapedCharP :: Parser Char
-escapedCharP =
-  try (char '\\' >> char tagDelimiter)
+escapedP :: Parser Char
+escapedP =
+  try (char pre >> anyChar)
   <|>
-  satisfy (/= tagDelimiter)   
-
-escapedCharNoSpaceP :: Parser Char
-escapedCharNoSpaceP =
-  try (char '\\' >> char tagDelimiter)
-  <|>
-  satisfy (\x -> x /= tagDelimiter && (not (isSpace x)))
+  satisfy (/= header)   
 
 delimitedP :: Parser String
-delimitedP = brackets $ many escapedCharP
+delimitedP = brackets $ many escapedP
   where 
-    bracket = char tagDelimiter 
+    bracket = char header 
     brackets = between bracket bracket
