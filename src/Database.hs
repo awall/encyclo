@@ -195,7 +195,8 @@ gen_cannedTags n = do
 
 gen_cannedDBTextPair = do
   n <- choose (0, 6)
-  (a, b) <- two (gen_cannedTags n)
+  a <- gen_cannedTags n
+  b <- gen_cannedTags n
   return (toDBText a, toDBText b)
 
 gen_multiDBTextPair = do
