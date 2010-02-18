@@ -2,7 +2,7 @@ module SpecialChars
 where
 
 import Data.Char
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 
 --
 -- | is a special character which denotes the start and end of a new tags section.
@@ -26,13 +26,13 @@ escape = concatMap replaceAt
       | x == pre    = [pre,pre]
       | otherwise   = [x]
 
-escapedP :: Parser Char
+escapedP :: Stream s m Char => ParsecT s u m Char
 escapedP =
   try (char pre >> anyChar)
   <|>
   satisfy (/= header)   
 
-delimitedP :: Parser String
+delimitedP :: Stream s m Char => ParsecT s u m String
 delimitedP = brackets $ many escapedP
   where 
     bracket = char header 

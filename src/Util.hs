@@ -2,15 +2,18 @@ module Util
 where
 
 import Data.Char(isSpace)
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 
 trim = reverse . dropSpaces . reverse . dropSpaces
   where dropSpaces = dropWhile isSpace
 
+notSpace :: Stream s m Char => ParsecT s u m Char
 notSpace = satisfy (not . isSpace)
 
+spaces1 :: Stream s m Char => ParsecT s u m String
 spaces1 = many1 space
 
+word :: Stream s m Char => ParsecT s u m String
 word = many1 notSpace
 
 simpleParse parser x =
