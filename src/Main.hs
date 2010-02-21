@@ -17,7 +17,7 @@ main = do
                        let loop = do
                            input <- gatherInput ref
                            let f = justParse C.command input
-                           f ref loop
+                           catch (f ref loop) (\e -> print e >> loop)
                        loop)
 
 -- User feedback
