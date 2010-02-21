@@ -3,6 +3,7 @@ module Config(
 )
 where
 
+import OS(defaultEditCommand)
 import Data.List(isPrefixOf)
 import System.IO
 import System.Directory
@@ -24,5 +25,5 @@ expand command filename = replace "%1" filename command
 editCommand :: String -> IO String
 editCommand filename = do
   exists <- doesFileExist configPath 
-  format <- if exists then readFile configPath else return "vim %1"
+  format <- if exists then readFile configPath else return defaultEditCommand
   return $ expand format filename
