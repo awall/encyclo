@@ -6,6 +6,7 @@ where
 import qualified Persistence as P
 import qualified State as S
 import qualified Database as D
+import qualified Config as C
 
 import Util
 import Text.ParserCombinators.Parsec
@@ -90,13 +91,13 @@ edit = do
     state <- readIORef ref
     let contents = D.ugly (S.currentWithFullPaths state)
     writeFile P.tempPath contents
-    runVim P.tempPath
+    runEditor P.tempPath
     newContents <- readFile P.tempPath
     case simpleParse D.databaseP newContents of
       Right db -> modifyIORef ref $ \s -> S.insert db (S.removeCurrent s)
       Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." P.tempPath err
-  where
-    runVim p = runCommand ("vim " ++ p) >>= waitForProcess
+  where runEditor path = 
+          C.editCommand path >>= runCommand >>= waitForProcess
 
 save = do
   string "save"
