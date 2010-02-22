@@ -4,12 +4,10 @@ where
 import qualified State as S
 import qualified Database as D
 
+import OS(dbPath)
 import Util
 import System.IO
 import Text.Printf
-
-dbPath = ".encyclo"
-tempPath = ".encyclotemp"
 
 open :: (S.State -> IO ()) -> IO ()
 open withState = do 

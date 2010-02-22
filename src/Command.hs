@@ -8,6 +8,7 @@ import qualified State as S
 import qualified Database as D
 import qualified Config as C
 
+import OS(tempDbPath)
 import Util
 import Text.ParserCombinators.Parsec
 import System.Process
@@ -90,12 +91,12 @@ edit = do
   return $ \ref -> do
     state <- readIORef ref
     let contents = D.ugly (S.currentWithFullPaths state)
-    writeFile P.tempPath contents
-    runEditor P.tempPath
-    newContents <- readFile P.tempPath
+    writeFile tempDbPath contents
+    runEditor tempDbPath
+    newContents <- readFile tempDbPath
     case simpleParse D.databaseP newContents of
       Right db -> modifyIORef ref $ \s -> S.insert db (S.removeCurrent s)
-      Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." P.tempPath err
+      Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." tempDbPath err
   where runEditor path = 
           C.editCommand path >>= runCommand >>= waitForProcess
 

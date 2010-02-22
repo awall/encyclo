@@ -3,13 +3,11 @@ module Config(
 )
 where
 
-import OS(defaultEditCommand)
+import OS(defaultEditCommand, configPath)
 import Data.List(isPrefixOf)
 import System.IO
 import System.Directory
 import Text.Printf
-
-configPath = ".encycloconfig"
 
 -- I can't believe there's no string replace function in the Prelude!
 replace target subst orig =
