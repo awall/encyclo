@@ -9,12 +9,12 @@ import Util
 import System.IO
 import Text.Printf
 
-open :: (V.View -> IO ()) -> IO ()
-open withView = do 
+open :: IO V.View
+open = do 
   contents <- readFile dbPath 
   case simpleParse D.databaseP contents of
-    Right db -> withView $ V.fromDatabase db
-    Left err -> printf "Parsing error when attempting to open '%s': %s." dbPath err 
+    Right db -> return $ V.fromDatabase db
+    Left err -> fail $ "Parsing error when attempting to open '" ++ dbPath ++ "': " ++ err ++ "."
 
 save :: V.View -> IO ()
 save = writeFile dbPath . D.ugly . V.full

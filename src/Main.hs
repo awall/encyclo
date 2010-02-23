@@ -14,15 +14,16 @@ import Data.List(intercalate)
 import Text.Printf
 
 main = do
-  P.open (\view -> do ref <- newIORef view 
-                      let loop = do
-                          input <- gatherInput ref
-                          unless (input == "quit") $ do
-                            case maybeParse C.command input of
-                                 Just c -> catch (C.execute c ref) print
-                                 Nothing -> putStrLn "Invalid input."
-                            loop 
-                      loop)
+  view <- P.open
+  ref <- newIORef view 
+  let loop = do
+      input <- gatherInput ref
+      unless (input == "quit") $ do
+        case maybeParse C.command input of
+             Just c -> catch (C.execute c ref) print
+             Nothing -> putStrLn "Invalid input."
+        loop 
+  loop
 
 -- User feedback
 gatherInput ref = do
