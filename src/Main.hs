@@ -20,7 +20,7 @@ main = do
       input <- gatherInput ref
       unless (input == "quit") $ do
         case maybeParse C.command input of
-             Just c -> catch (C.execute c ref) print
+             Just c -> catch (c ref) print
              Nothing -> putStrLn "Invalid input."
         loop 
   loop

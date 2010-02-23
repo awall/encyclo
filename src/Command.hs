@@ -1,6 +1,5 @@
 module Command(
   command
-, execute
 )
 where
 
@@ -15,23 +14,20 @@ import Text.ParserCombinators.Parsec
 import System.Process
 import System.IO
 import Data.IORef
-import Data.Char
 import Data.List
 import Data.Set(elems)
 import Text.Printf
 
-data Command = Edit | Save | Cat | Ls | CdMinus [String] | CdPlus [String] | Cd [String]
-
-command :: Parser Command
+command :: Parser (IORef V.View -> IO ())
 command =
-  simple "edit" Edit     <|>
-  simple "cat"  Cat      <|> 
-  simple "ls"   Ls       <|> 
-  simple "save" Save     <|> 
+  simple "edit" edit     <|>
+  simple "cat"  cat      <|> 
+  simple "ls"   ls       <|> 
+  simple "save" save     <|> 
 
-  withArgs "cd-" CdMinus <|>
-  withArgs "cd+" CdPlus  <|>
-  withArgs "cd"  Cd      
+  withArgs "cd-" cdMinus <|>
+  withArgs "cd+" cdPlus  <|>
+  withArgs "cd"  cd      
 
   where simple word command = try (string word >> return command)
         withArgs word command = try (string word >> args >>= return . command)
@@ -40,25 +36,23 @@ command =
 --
 -- Command's execution
 --
-execute :: Command -> IORef V.View -> IO ()
-
-execute Cat ref = do
+cat ref = do
   view <- readIORef ref
   putStrLn $ D.pretty (V.current view)
 
-execute Ls ref = do
+ls ref = do
   view <- readIORef ref
   putStrLn $ (intercalate "\n" . sort . elems) (V.possibleTags view)
 
-execute Save ref = do
+save ref = do
   view <- readIORef ref
   P.save view
 
-execute (Cd tags) ref = modifyIORef ref (V.replaceTags tags)
-execute (CdPlus tags) ref = modifyIORef ref (V.addTags tags)
-execute (CdMinus tags) ref = modifyIORef ref (V.removeTags tags)
+cd tags ref = modifyIORef ref (V.replaceTags tags)
+cdPlus tags ref = modifyIORef ref (V.addTags tags)
+cdMinus tags ref = modifyIORef ref (V.removeTags tags)
 
-execute Edit ref = do
+edit ref = do
   view <- readIORef ref
   let contents = D.ugly (V.currentWithFullPaths view)
   writeFile tempDbPath contents
