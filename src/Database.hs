@@ -8,7 +8,7 @@ module Database(
   , select
   , prune
   , merge
-  , remove
+  , minus
   , size
   , tags
   , add
@@ -58,8 +58,8 @@ prune tags db =
 merge :: Database -> Database -> Database
 merge (Database m1) (Database m2) = Database $ (M.unionWith _combine) m2 m1
 
-remove :: Database -> Database -> Database
-remove (Database m1) (Database m2) = Database $ M.difference m1 m2
+minus :: Database -> Database -> Database
+minus (Database m1) (Database m2) = Database $ M.difference m1 m2
 
 add :: Tags -> String -> Database -> Database
 add tags content (Database m) = Database $ (M.unionWith _combine) m (M.singleton tags content)
