@@ -6,7 +6,8 @@ import qualified View as V
 import qualified Database as D
 import qualified Command as C
 
-import Util(justParse)
+import Control.Monad(unless)
+import Util(maybeParse)
 import System.IO
 import Data.IORef
 import Data.List(intercalate)
@@ -16,8 +17,11 @@ main = do
   P.open (\view -> do ref <- newIORef view 
                       let loop = do
                           input <- gatherInput ref
-                          let f = justParse C.command input
-                          catch (f ref loop) (\e -> print e >> loop)
+                          unless (input == "quit") $ do
+                            case maybeParse C.command input of
+                                 Just c -> catch (C.execute c ref) print
+                                 Nothing -> putStrLn "Invalid input."
+                            loop 
                       loop)
 
 -- User feedback

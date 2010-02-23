@@ -1,5 +1,6 @@
 module Command(
   command
+, execute
 )
 where
 
@@ -19,87 +20,52 @@ import Data.List
 import Data.Set(elems)
 import Text.Printf
 
-type Ref = IORef V.View
+data Command = Edit | Save | Cat | Ls | CdMinus [String] | CdPlus [String] | Cd [String]
 
-command :: Parser (Ref -> IO () -> IO ())
+command :: Parser Command
 command =
-  try (wrap edit) 
-  <|> try (wrapRO cat)
-  <|> try (wrapRO ls)
-  <|> try (wrapRO save)
-  <|> try (wrap cdMinus)
-  <|> try (wrap cdPlus)
-  <|> try (wrap cd)
-  <|> try quit
-  <|> wrap invalid
+  simple "edit" Edit     <|>
+  simple "cat"  Cat      <|> 
+  simple "ls"   Ls       <|> 
+  simple "save" Save     <|> 
+
+  withArgs "cd-" CdMinus <|>
+  withArgs "cd+" CdPlus  <|>
+  withArgs "cd"  Cd      
+
+  where simple word command = try (string word >> return command)
+        withArgs word command = try (string word >> args >>= return . command)
+        args = (spaces1 >> word `sepBy` spaces1) <|> return []
 
 --
--- Utility parsers
+-- Command's execution
 --
-args =
-  do spaces1
-     word `sepBy` spaces1
-  <|> return []
+execute :: Command -> IORef V.View -> IO ()
 
---
--- Wrappers
---
-wrapRO :: Parser (V.View -> IO ()) -> Parser (Ref -> IO () -> IO ())
-wrapRO parser = do
-  f <- parser
-  return $ \ref continue -> do
-    state <- readIORef ref
-    f state
-    continue
+execute Cat ref = do
+  view <- readIORef ref
+  putStrLn $ D.pretty (V.current view)
 
-wrap :: Parser (Ref -> IO ()) -> Parser (Ref -> IO () -> IO ()) 
-wrap parser = do 
-  f <- parser
-  return $ \ref continue -> do
-    f ref
-    continue
+execute Ls ref = do
+  view <- readIORef ref
+  putStrLn $ (intercalate "\n" . sort . elems) (V.possibleTags view)
 
---
--- Command Parsers
---
-quit = do
-  string "quit"
-  return $ const $ const $ return ()
+execute Save ref = do
+  view <- readIORef ref
+  P.save view
 
-invalid = do
-  return $ const $ putStrLn "invalid command" 
+execute (Cd tags) ref = modifyIORef ref (V.replaceTags tags)
+execute (CdPlus tags) ref = modifyIORef ref (V.addTags tags)
+execute (CdMinus tags) ref = modifyIORef ref (V.removeTags tags)
 
-cat = do
-  string "cat"
-  return $ putStrLn . D.pretty . V.current
-
-ls = do
-  string "ls"
-  return $ putStrLn . intercalate "\n" . sort . elems . V.possibleTags 
-
-cdish cmd f = do
-  string cmd
-  tags <- args
-  return $ \ref -> modifyIORef ref (f tags)
-
-cd      = cdish "cd"  V.replaceTags 
-cdMinus = cdish "cd-" V.removeTags 
-cdPlus  = cdish "cd+" V.addTags
-
-edit = do
-  string "edit"
-  return $ \ref -> do
-    state <- readIORef ref
-    let contents = D.ugly (V.currentWithFullPaths state)
-    writeFile tempDbPath contents
-    runEditor tempDbPath
-    newContents <- readFile tempDbPath
-    case simpleParse D.databaseP newContents of
-      Right db -> modifyIORef ref $ V.replaceCurrent db
-      Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." tempDbPath err
+execute Edit ref = do
+  view <- readIORef ref
+  let contents = D.ugly (V.currentWithFullPaths view)
+  writeFile tempDbPath contents
+  runEditor tempDbPath
+  newContents <- readFile tempDbPath
+  case simpleParse D.databaseP newContents of
+    Right db -> modifyIORef ref $ V.replaceCurrent db
+    Left err -> printf "Failed to parse '%s': %s. Your changes were not persisted." tempDbPath err
   where runEditor path = 
           C.editCommand path >>= runCommand >>= waitForProcess
-
-save = do
-  string "save"
-  return P.save
